@@ -1,0 +1,98 @@
+.formContainer {
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  margin: 2rem auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+  .header {
+    text-align: center;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .form label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .form input,
+  .form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .buttonRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .clearButton {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .clearButton:hover {
+    background-color: #5a6268;
+  }
+  
+  .generateButton {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .generateButton:hover {
+    background-color: #218838;
+  }
+
+  .loading {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #444;
+    text-align: center;
+  }
+  
+  .error {
+    margin-top: 20px;
+    font-weight: bold;
+    color: red;
+    text-align: center;
+  }
+  
+  .mapLegendContainer {
+    margin-top: 2rem;
+  }
+  
+  .mapTitle {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .legendBox {
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+  

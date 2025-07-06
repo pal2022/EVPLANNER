@@ -1,0 +1,18 @@
+.headingContainer {
+    text-align: center;
+    padding: 6rem 1.5rem 4rem;
+  }
+  
+  .headingTitle {
+    font-size: 2.5rem;
+    color: #1d4ed8;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .headingDescription {
+    font-size: 1.25rem;
+    color: #4b5563;
+    max-width: 600px;
+    margin: 0 auto;
+  }
