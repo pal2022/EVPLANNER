@@ -16,6 +16,7 @@ export default function Form() {
   const [mapUrls, setMapUrls] = useState([]);
   const [legendHtmls, setLegendHtmls] = useState([]);
   const [error, setError] = useState('');
+  const [isFormMinimized, setIsFormMinimized] = useState(false);
 
   const consumptionRates = {
     "Tesla Model 3": 0.137,
@@ -123,6 +124,10 @@ export default function Form() {
     handleSubmit();
   }, [handleSubmit]);
 
+  const handleToggleForm = useCallback(() => {
+    setIsFormMinimized(prev => !prev);
+  }, []);
+
   console.log('Form component rendered with state:', { 
     loading, 
     mapUrls: mapUrls.length, 
@@ -132,9 +137,22 @@ export default function Form() {
 
   return (
     <div className={styles.formContainer}>
+      {/* Toggle Button - Always visible when maps are generated */}
+      {mapUrls && mapUrls.length > 0 && (
+        <button
+          onClick={handleToggleForm}
+          className="mb-4 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center border-0 text-xl"
+          title={isFormMinimized ? "Show Form" : "Hide Form"}
+        >
+          {isFormMinimized ? "👁️" : "👁️‍🗨️"}
+        </button>
+      )}
+
       <div className="flex gap-8">
-        {/* Form Section - 25% */}
-        <div className="w-1/4 min-w-0">
+        {/* Form Section - Conditional width based on minimized state */}
+        <div className={`transition-all duration-300 ease-in-out ${
+          isFormMinimized ? 'hidden' : 'w-1/4 min-w-0'
+        }`}>
           <div className={styles.form}>
             <label htmlFor="start">Starting Location:</label>
             <input 
@@ -222,14 +240,20 @@ export default function Form() {
           {error && <div className={styles.error}>{error}</div>}
         </div>
 
-        {/* Spacer - 5% */}
-        <div className="w-[5%]"></div>
+        {/* Spacer - Conditional width based on minimized state */}
+        <div className={`transition-all duration-300 ease-in-out ${
+          isFormMinimized ? 'hidden' : 'w-[5%]'
+        }`}></div>
 
-        {/* Maps and Legends Section - 70% total */}
+        {/* Maps and Legends Section - Conditional width based on minimized state */}
         {mapUrls && mapUrls.length > 0 && (
-          <div className="w-[70%] flex gap-6">
-            {/* Map Section - 80% of 70% = 56% total */}
-            <div className="w-[75%] space-y-4 min-w-0">
+          <div className={`transition-all duration-300 ease-in-out flex gap-6 ${
+            isFormMinimized ? 'w-full' : 'w-[70%]'
+          }`}>
+            {/* Map Section - Conditional width based on minimized state */}
+            <div className={`transition-all duration-300 ease-in-out space-y-4 min-w-0 ${
+              isFormMinimized ? 'w-[80%]' : 'w-[75%]'
+            }`}>
               {mapUrls.map((url, idx) => (
                 <div key={`map-${idx}-${url}`} className="border border-gray-200 rounded-lg shadow-md p-4 bg-white">
                   {/* <h3 className="text-md font-semibold text-gray-700 mb-2">Route {idx + 1}</h3> */}
@@ -259,8 +283,8 @@ export default function Form() {
               ))}
             </div>
 
-            {/* Legend Section - 20% of 70% = 14% total */}
-            <div className="w-[25%] space-y-4 min-w-0">
+            {/* Legend Section - Keep the same size */}
+            <div className="w-[20%] space-y-4 min-w-0">
               {legendHtmls && legendHtmls.map((legend, idx) => (
                 <div key={`legend-${idx}`} className="p-3">
                   <div
