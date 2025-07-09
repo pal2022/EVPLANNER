@@ -21,6 +21,26 @@ _cached_road_network = None
 _cached_charging_stations = None
 _cached_intersections = None
 
+def normalize_address_for_filename(address):
+    """
+    Normalize address string for consistent filename generation.
+    Converts to lowercase, replaces spaces with underscores, and removes special characters.
+    """
+    if not address:
+        return "unknown"
+    
+    # Convert to lowercase and replace spaces with underscores
+    normalized = address.lower().replace(" ", "_")
+    
+    # Remove special characters that might cause issues in filenames
+    normalized = re.sub(r'[^\w\-_]', '', normalized)
+    
+    # Ensure it's not empty after cleaning
+    if not normalized:
+        normalized = "unknown"
+    
+    return normalized
+
 def haversine_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points 
@@ -624,7 +644,7 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
                                 'description': f"Section 2 Path {i+1}: Charging Station to End"
                             })
                         
-                        map_filename = f"route_{start_address}_to_{end_address}_two_segments.html"
+                        map_filename = f"static/maps/route_{normalize_address_for_filename(start_address)}_to_{normalize_address_for_filename(end_address)}_two_segments.html"
                         try:
                             m, legend_html = map_renderer.display_two_segment_paths(
                                 road_network, charging_stations, all_paths, all_costs, section1_socs, section2_socs, path_sections,
@@ -656,7 +676,7 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
                 print("No valid paths found")
                 return None, None, None, None, None, None
             
-            map_filename = f'pareto_paths_{start_address.replace(" ", "_")}_{end_address.replace(" ", "_")}.html'
+            map_filename = f'static/maps/pareto_paths_{normalize_address_for_filename(start_address)}_{normalize_address_for_filename(end_address)}.html'
                 
             try:
                 m, legend_html = map_renderer.display_paths_on_map(road_network, charging_stations, paths, costs, remaining_socs,

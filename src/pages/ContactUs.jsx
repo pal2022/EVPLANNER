@@ -19,8 +19,14 @@ export default function ContactUs() {
           </p>
           <p>
             📧 Email:{" "}
-            <a href="mailto:" className="text-blue-500 underline">
-              
+            <a href="mailto:zihaoli4@yahoo.ca" className="text-blue-500 underline">
+              zihaoli4@yahoo.ca
+            </a>
+          </p>
+          <p>
+            📧 Email:{" "}
+            <a href="mailto:m.nascimento@northeastern.edu" className="text-blue-500 underline">
+            m.nascimento@northeastern.edu
             </a>
           </p>
         </div>
@@ -28,7 +34,7 @@ export default function ContactUs() {
         <div className="space-y-2">
           <p>
             🐙 GitHub:{" "}
-            <a href="https://github.com/evplanner" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+            <a href="https://github.com/pal2022/EVPLANNER" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
               github.com/evplanner
             </a>
           </p>
@@ -43,8 +49,8 @@ export default function ContactUs() {
           </p>
           <p>
             💼 LinkedIn:{" "}
-            <a href="https://linkedin.com/in/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-              linkedin.com/in/
+            <a href="https://www.linkedin.com/in/zi-hao-li-1b2932225/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+              linkedin.com/in/zi-hao-li
             </a>
           </p>
         </div>
