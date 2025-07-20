@@ -21,6 +21,29 @@ _cached_road_network = None
 _cached_charging_stations = None
 _cached_intersections = None
 
+def ensure_maps_directory():
+    """
+    Ensure the static/maps directory exists for saving map files
+    """
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    maps_dir = os.path.join(script_dir, 'static', 'maps')
+    
+    # Create the directory if it doesn't exist
+    if not os.path.exists(maps_dir):
+        os.makedirs(maps_dir)
+        print(f"Created maps directory: {maps_dir}")
+    
+    return maps_dir
+
+def get_maps_filepath(filename):
+    """
+    Get the absolute filepath for a map file in the static/maps directory
+    """
+    maps_dir = ensure_maps_directory()
+    filepath = os.path.join(maps_dir, filename)
+    return filepath
+
 def normalize_address_for_filename(address):
     """
     Normalize address string for consistent filename generation.
@@ -644,7 +667,8 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
                                 'description': f"Section 2 Path {i+1}: Charging Station to End"
                             })
                         
-                        map_filename = f"static/maps/route_{normalize_address_for_filename(start_address)}_to_{normalize_address_for_filename(end_address)}_two_segments.html"
+                        map_filename = get_maps_filepath(f"route_{normalize_address_for_filename(start_address)}_to_{normalize_address_for_filename(end_address)}_two_segments.html")
+                        print(f"Saving two-segment map to: {map_filename}")
                         try:
                             m, legend_html = map_renderer.display_two_segment_paths(
                                 road_network, charging_stations, all_paths, all_costs, section1_socs, section2_socs, path_sections,
@@ -676,7 +700,8 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
                 print("No valid paths found")
                 return None, None, None, None, None, None
             
-            map_filename = f'static/maps/pareto_paths_{normalize_address_for_filename(start_address)}_{normalize_address_for_filename(end_address)}.html'
+            map_filename = get_maps_filepath(f'pareto_paths_{normalize_address_for_filename(start_address)}_{normalize_address_for_filename(end_address)}.html')
+            print(f"Saving map to: {map_filename}")
                 
             try:
                 m, legend_html = map_renderer.display_paths_on_map(road_network, charging_stations, paths, costs, remaining_socs,

@@ -7,7 +7,7 @@ export default function Heading1() {
     <>
       <section className="max-w-4xl mx-auto text-center py-16 px-6">
         <h1 className="text-4xl md:text-5xl font-bold text-blue-700 mb-4">
-          Welcome to EV Route Planner
+          Your Route, Your Rules
         </h1>
         <p className="text-gray-600 text-lg md:text-xl">
           Plan your electric vehicle routes with optimized battery usage, charging stops, and real map visualizations.
@@ -24,17 +24,17 @@ export default function Heading1() {
             <div className="flex flex-col items-center p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-blue-100 hover:to-indigo-100 transition-all duration-300 ease-in-out cursor-pointer group">
               <div className="text-5xl mb-4 text-blue-600 group-hover:text-blue-700 group-hover:scale-110 transition-all duration-300">🔋</div>
               <h5 className="text-lg font-semibold text-gray-900 group-hover:text-blue-800 transition-colors duration-300">Battery-Aware Routing</h5>
-              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Plan routes with real-time battery consumption tracking and charging station proximity.</p>
+              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Plan routes with real-time battery consumption <br/> tracking and charging station proximity.</p>
             </div>
             <div className="flex flex-col items-center p-6 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-green-100 hover:to-emerald-100 transition-all duration-300 ease-in-out cursor-pointer group">
               <div className="text-5xl mb-4 text-green-600 group-hover:text-green-700 group-hover:scale-110 transition-all duration-300">⚡</div>
               <h5 className="text-lg font-semibold text-gray-900 group-hover:text-green-800 transition-colors duration-300">Multi-Route Optimization</h5>
-              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Get multiple route options balancing travel time and safety with charging station access.</p>
+              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Get multiple route options balancing travel time and safety <br/>with charging station access.</p>
             </div>
             <div className="flex flex-col items-center p-6 rounded-xl bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-purple-100 hover:to-violet-100 transition-all duration-300 ease-in-out cursor-pointer group">
               <div className="text-5xl mb-4 text-purple-600 group-hover:text-purple-700 group-hover:scale-110 transition-all duration-300">🗺️</div>
               <h5 className="text-lg font-semibold text-gray-900 group-hover:text-purple-800 transition-colors duration-300">Interactive Maps</h5>
-              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Visualize routes with detailed maps showing charging stations and critical battery points.</p>
+              <p className="text-sm text-gray-600 mt-2 group-hover:text-gray-700 transition-colors duration-300">Visualize routes with detailed maps showing <br/> charging stations and critical battery points.</p>
             </div>
           </div>
         </div>

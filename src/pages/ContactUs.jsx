@@ -12,45 +12,42 @@ export default function ContactUs() {
       <div className="mt-6 space-y-3 text-gray-700 text-base">
         <div className="space-y-2">
           <p>
-            📧 Email:{" "}
+            <strong>Palkan Motwani</strong> •{" "}
             <a href="mailto:palkan142000@gmail.com" className="text-blue-500 underline">
               palkan142000@gmail.com
-            </a>
-          </p>
-          <p>
-            📧 Email:{" "}
-            <a href="mailto:zihaoli4@yahoo.ca" className="text-blue-500 underline">
-              zihaoli4@yahoo.ca
-            </a>
-          </p>
-          <p>
-            📧 Email:{" "}
-            <a href="mailto:m.nascimento@northeastern.edu" className="text-blue-500 underline">
-            m.nascimento@northeastern.edu
-            </a>
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <p>
-            🐙 GitHub:{" "}
-            <a href="https://github.com/pal2022/EVPLANNER" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-              github.com/evplanner
-            </a>
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <p>
-            💼 LinkedIn:{" "}
+            </a>{" "}
+            •{" "}
             <a href="https://linkedin.com/in/palkan-motwani" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-              linkedin.com/in/palkan-motwani
+              LinkedIn
             </a>
           </p>
           <p>
-            💼 LinkedIn:{" "}
+            <strong>Zi Hao Li</strong> •{" "}
+            <a href="mailto:zihaoli17@yahoo.ca" className="text-blue-500 underline">
+              zihaoli17@yahoo.ca
+            </a>{" "}
+            •{" "}
             <a href="https://www.linkedin.com/in/zi-hao-li-1b2932225/" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-              linkedin.com/in/zi-hao-li
+              LinkedIn
+            </a>
+          </p>
+          <p>
+            <strong>Mario Nascimento</strong> •{" "}
+            <a href="mailto:m.nascimento@northeastern.edu" className="text-blue-500 underline">
+              m.nascimento@northeastern.edu
+            </a>
+            •{" "}
+            <a href="" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+              LinkedIn
+            </a>
+          </p>
+        </div>
+        
+        <div className="mt-6">
+          <p className="text-lg">
+            🐙 <strong>GitHub:</strong>{" "}
+            <a href="https://github.com/pal2022/EVPLANNER" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline font-semibold">
+              github.com/evplanner
             </a>
           </p>
         </div>

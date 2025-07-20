@@ -7,7 +7,7 @@ export default function Menu() {
       <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
         <div style={{ display: 'flex', fontSize: '1.5rem', gap: '2rem', alignItems: 'center' }}>
           <div style={{ fontWeight: 'bold', marginRight: '2rem' }}>
-            Title
+          ParetoRouteChoice
           </div>
           <NavLink
             to="/"
@@ -27,7 +27,7 @@ export default function Menu() {
               marginRight: '2rem'
             })}
           >
-            Map
+            Route
           </NavLink>
           <NavLink
             to="/contact"

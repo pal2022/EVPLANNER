@@ -76,7 +76,10 @@ def generate_route():
 
 @app.route('/maps/<path:filename>')
 def serve_map(filename):
-    return send_from_directory('static/maps', filename)
+    # Get the absolute path to the static/maps directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    maps_dir = os.path.join(script_dir, 'static', 'maps')
+    return send_from_directory(maps_dir, filename)
 
 # No "/" route — React handles frontend separately
 

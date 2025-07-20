@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exclude JSON and HTML files
+*.json
+*.html
+
+# Exclude cache directory
+src/cache/
