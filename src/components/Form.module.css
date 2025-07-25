@@ -1,93 +1,120 @@
 .formContainer {
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  background: #fff;
+  border-radius: 18px;
   margin: 2rem auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  max-width: none;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  height: 100%;
 }
 
-  .header {
-    text-align: center;
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
-    color: #333;
-  }
-  
-  .form label {
-    display: block;
-    margin-top: 1rem;
-    font-weight: 500;
-    color: #444;
-  }
-  
-  .form input,
-  .form select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 0.4rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-  
-  .buttonRow {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-  
-  .clearButton {
-    background-color: #6c757d;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .clearButton:hover {
-    background-color: #5a6268;
-  }
-  
-  .generateButton {
-    background-color: #28a745;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .generateButton:hover {
-    background-color: #218838;
-  }
+.formTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
 
-  .loading {
-    margin-top: 20px;
-    font-weight: bold;
-    color: #444;
-    text-align: center;
-  }
-  
-  .error {
-    margin-top: 20px;
-    font-weight: bold;
-    color: red;
-    text-align: center;
-  }
-  
+.form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 1.2rem;
+  height: 100%;
+  align-items: stretch;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+}
+
+.form label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.3rem;
+  flex: 0 0 auto;
+}
+
+.form input,
+.form select {
+  width: 100%;
+  padding: 12px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #f9fafb;
+  margin-bottom: 0.2rem;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.clearButton, .generateButton {
+  flex: 1;
+  font-size: 1.1rem;
+  padding: 12px 0;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.clearButton {
+  background-color: #e5e7eb;
+  color: #374151;
+  border: 1px solid #cbd5e1;
+}
+
+.clearButton:hover {
+  background-color: #d1d5db;
+}
+
+.generateButton {
+  background-color: #22c55e;
+  color: #fff;
+  border: none;
+}
+
+.generateButton:hover {
+  background-color: #16a34a;
+}
+
+.loading, .error {
+  margin-top: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.error {
+  color: #ef4444;
+}
+
   .mapLegendContainer {
     margin-top: 2rem;
   }
-  
+
   .mapTitle {
     font-weight: bold;
     font-size: 1.2rem;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .legendBox {
     padding: 1rem;
     background-color: #f5f5f5;

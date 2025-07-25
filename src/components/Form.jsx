@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import axios from 'axios';
 import styles from './Form.module.css';
 
-export default function Form({ start, destination, onStartChange, onDestinationChange }) {
+export default function Form({ start, destination, onStartChange, onDestinationChange, mapUrls, setMapUrls, legendHtmls, setLegendHtmls, onClear, isFormMinimized, setIsFormMinimized }) {
   const [formData, setFormData] = useState({
     initial_soc: '',
     threshold_soc: '',
@@ -11,10 +11,7 @@ export default function Form({ start, destination, onStartChange, onDestinationC
   });
 
   const [loading, setLoading] = useState(false);
-  const [mapUrls, setMapUrls] = useState([]);
-  const [legendHtmls, setLegendHtmls] = useState([]);
   const [error, setError] = useState('');
-  const [isFormMinimized, setIsFormMinimized] = useState(false);
 
   const consumptionRates = {
     "Tesla Model 3": 0.137,
@@ -64,7 +61,8 @@ export default function Form({ start, destination, onStartChange, onDestinationC
     setMapUrls([]);
     setLegendHtmls([]);
     setError('');
-  }, [onStartChange, onDestinationChange]);
+    if (onClear) onClear();
+  }, [onStartChange, onDestinationChange, setMapUrls, setLegendHtmls, onClear]);
 
   const handleSubmit = useCallback(async (e) => {
     if (e) {
@@ -100,7 +98,7 @@ export default function Form({ start, destination, onStartChange, onDestinationC
     } finally {
       setLoading(false);
     }
-  }, [formData, start, destination]);
+  }, [formData, start, destination, setMapUrls, setLegendHtmls]);
 
   const handleGenerateClick = useCallback((e) => {
     e.preventDefault();
@@ -110,10 +108,10 @@ export default function Form({ start, destination, onStartChange, onDestinationC
 
   const handleToggleForm = useCallback(() => {
     setIsFormMinimized(prev => !prev);
-  }, []);
+  }, [setIsFormMinimized]);
 
   return (
-    <div className={styles.formContainer}>
+    <div className={`${styles.formContainer} w-full bg-white p-6 rounded-lg shadow`}>
       {mapUrls && mapUrls.length > 0 && (
         <button
           onClick={handleToggleForm}
@@ -123,123 +121,101 @@ export default function Form({ start, destination, onStartChange, onDestinationC
           {isFormMinimized ? "👁️" : "👁️‍🗨️"}
         </button>
       )}
-      <div className="flex gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         <div className={`transition-all duration-300 ease-in-out ${
-          isFormMinimized ? 'hidden' : 'w-1/4 min-w-0'
+          isFormMinimized ? 'hidden' : 'w-full max-w-sm'
         }`}>
-          <div className={styles.form}>
-            <label htmlFor="start">Starting Location:</label>
-            <input
-              type="text"
-              id="start"
-              name="start"
-              required
-              value={start}
-              onChange={handleChange}
-            />
-            <label htmlFor="destination">Destination:</label>
-            <input
-              type="text"
-              id="destination"
-              name="destination"
-              required
-              value={destination}
-              onChange={handleChange}
-            />
-            <label htmlFor="initial_soc">Initial Battery Percentage (%):</label>
-            <input
-              type="number"
-              id="initial_soc"
-              name="initial_soc"
-              required
-              min="0"
-              max="100"
-              step="0.1"
-              value={formData.initial_soc}
-              onChange={handleChange}
-            />
-            <label htmlFor="threshold_soc">Threshold Battery Percentage (%):</label>
-            <input
-              type="number"
-              id="threshold_soc"
-              name="threshold_soc"
-              required
-              min="0"
-              max="50"
-              step="0.1"
-              value={formData.threshold_soc}
-              onChange={handleChange}
-            />
-            <label htmlFor="ev_model">Select EV Model:</label>
-            <select
-              id="ev_model"
-              name="ev_model"
-              required
-              value={formData.ev_model}
-              onChange={handleChange}
-            >
-              <option value="" disabled>Select your EV</option>
-              {Object.keys(consumptionRates).map((model) => (
-                <option key={model} value={model}>{model}</option>
-              ))}
-            </select>
-            <input type="hidden" name="consumption_rate" value={formData.consumption_rate} />
-            <div className={styles.buttonRow}>
-              <button
-                type="button"
-                onClick={handleClear}
-                className={styles.clearButton}
-              >
-                Clear Form
-              </button>
-              <button
-                type="button"
-                onClick={handleGenerateClick}
-                className={styles.generateButton}
-                disabled={loading}
-              >
-                {loading ? 'Generating...' : 'Generate Route'}
-              </button>
+          {!isFormMinimized && (
+            <div className={styles.form}>
+              <div className={styles.formTitle}>EV Route Planner Form</div>
+              <div className={styles.formGroup}>
+                <label htmlFor="start">Starting Location:</label>
+                <input
+                  type="text"
+                  id="start"
+                  name="start"
+                  required
+                  value={start}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="destination">Destination:</label>
+                <input
+                  type="text"
+                  id="destination"
+                  name="destination"
+                  required
+                  value={destination}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="initial_soc">Initial Battery Percentage (%):</label>
+                <input
+                  type="number"
+                  id="initial_soc"
+                  name="initial_soc"
+                  required
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={formData.initial_soc}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="threshold_soc">Threshold Battery Percentage (%):</label>
+                <input
+                  type="number"
+                  id="threshold_soc"
+                  name="threshold_soc"
+                  required
+                  min="0"
+                  max="50"
+                  step="0.1"
+                  value={formData.threshold_soc}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="ev_model">Select EV Model:</label>
+                <select
+                  id="ev_model"
+                  name="ev_model"
+                  required
+                  value={formData.ev_model}
+                  onChange={handleChange}
+                >
+                  <option value="" disabled>Select your EV</option>
+                  {Object.keys(consumptionRates).map((model) => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
+                </select>
+                <input type="hidden" name="consumption_rate" value={formData.consumption_rate} />
+              </div>
+              <div className={styles.buttonRow}>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className={styles.clearButton}
+                >
+                  Clear Form
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGenerateClick}
+                  className={styles.generateButton}
+                  disabled={loading}
+                >
+                  {loading ? 'Generating...' : 'Generate Route'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
           {loading && <div className={styles.loading}>🛠️ Generating map... Please wait.</div>}
           {error && <div className={styles.error}>{error}</div>}
         </div>
-        <div className={`transition-all duration-300 ease-in-out ${
-          isFormMinimized ? 'hidden' : 'w-[5%]'
-        }`}></div>
-        {mapUrls && mapUrls.length > 0 && (
-          <div className={`transition-all duration-300 ease-in-out flex gap-6 ${
-            isFormMinimized ? 'w-full' : 'w-[70%]'
-          }`}>
-            <div className={`transition-all duration-300 ease-in-out space-y-4 min-w-0 ${
-              isFormMinimized ? 'w-[80%]' : 'w-[75%]'
-            }`}>
-              {mapUrls.map((url, idx) => (
-                <div key={`map-${idx}-${url}`} className="border border-gray-200 rounded-lg shadow-md p-4 bg-white">
-                  <iframe
-                    src={url}
-                    title={`Route ${idx + 1}`}
-                    className="w-full h-[600px] rounded-lg border"
-                    loading="lazy"
-                    onError={(e) => console.error('Iframe failed to load:', e)}
-                    onLoad={() => console.log('Iframe loaded successfully for route:', idx + 1)}
-                  ></iframe>
-                </div>
-              ))}
-            </div>
-            <div className="w-[20%] space-y-4 min-w-0">
-              {legendHtmls && legendHtmls.map((legend, idx) => (
-                <div key={`legend-${idx}`} className="p-3">
-                  <div
-                    className="text-xs text-gray-700 overflow-auto max-h-[400px]"
-                    dangerouslySetInnerHTML={{ __html: legend }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

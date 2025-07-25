@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, useMapEvents, Rectangle, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import styles from './MapSelector.module.css';
 
 // Vancouver bounds
 const bounds = [
@@ -77,16 +78,16 @@ export default function MapSelector({ start, destination, onStartChange, onDesti
   };
 
   return (
-    <div className="w-full h-[400px] flex flex-col items-center">
-      <div className="mb-2">
+    <div className={`${styles.container} w-full`}>
+      <div className={styles.buttonGroup}>
         <button
-          className={`px-4 py-2 rounded-l ${mode === 'start' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          className={`${styles.button} ${mode === 'start' ? styles.active : ''}`}
           onClick={() => setMode('start')}
         >
           Set Start
         </button>
         <button
-          className={`px-4 py-2 rounded-r ${mode === 'destination' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          className={`${styles.button} ${mode === 'destination' ? styles.active : ''}`}
           onClick={() => setMode('destination')}
         >
           Set Destination
@@ -94,7 +95,7 @@ export default function MapSelector({ start, destination, onStartChange, onDesti
       </div>
       <MapContainer
         bounds={bounds}
-        style={{ height: '300px', width: '100%' }}
+        style={{ height: '500px', width: '100%' }}
         scrollWheelZoom={true}
         maxBounds={bounds}
         minZoom={10}
@@ -109,7 +110,7 @@ export default function MapSelector({ start, destination, onStartChange, onDesti
         <LocationMarker position={startMarker} label="Start" />
         <LocationMarker position={destMarker} label="Destination" />
       </MapContainer>
-      <div className="mt-2 text-sm text-gray-600 text-center">
+      <div className={styles.infoText}>
         Click on the map to set the {mode === 'start' ? 'starting location' : 'destination'}.
       </div>
     </div>

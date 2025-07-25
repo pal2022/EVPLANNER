@@ -43,10 +43,10 @@ export default function Heading1() {
 
 
       {/* Collapsible Table Section */}
-      <section className="max-w-6xl mx-auto py-8 px-6">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* <section className="max-w-6xl mx-auto py-8 px-6">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden"> */}
           {/* Dropdown Header */}
-          <button
+          {/* <button
             onClick={() => setIsTableExpanded(!isTableExpanded)}
             className="w-full px-6 py-4 text-left bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex justify-between items-center"
           >
@@ -54,10 +54,10 @@ export default function Heading1() {
             <span className="text-gray-500 text-2xl transition-transform duration-200">
               {isTableExpanded ? '−' : '+'}
             </span>
-          </button>
+          </button> */}
           
           {/* Collapsible Content */}
-          {isTableExpanded && (
+          {/* {isTableExpanded && (
             <div className="transition-all duration-300 ease-in-out overflow-hidden max-h-screen opacity-100">
               <table className="w-full">
                 <tbody>
@@ -142,7 +142,7 @@ export default function Heading1() {
             </div>
           )}
         </div>
-      </section>
+      </section> */}
 
     </>
   );
