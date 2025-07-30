@@ -6,6 +6,10 @@ from map_construction import test_route_planning
 app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests (from React)
 
+@app.route("/")
+def home():
+    return "Welcome to the EV Planner API. Use the /generate-route endpoint to generate routes."
+
 @app.route("/generate-route", methods=["POST"])
 def generate_route():
     try:
