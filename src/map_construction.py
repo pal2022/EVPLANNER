@@ -435,12 +435,19 @@ def find_pareto_paths(G, nearest_stations, start_node, end_node, max_paths, init
     
     paths, costs, socs = filter_similar_routes(paths, costs, socs)
 
-    print("\nPareto-optimal paths:")
+    print(f"\nPareto-optimal paths found: {len(paths)}")
     for i, (path, cost) in enumerate(zip(paths, costs)):
         remaining_soc = calculate_remaining_soc(path, G, initial_soc, energy_consumption)
         
         safety_km = cost['safety'] / 1000
         print(f"Path {i+1}: Travel time: {cost['time']:.1f}s, Safety: {safety_km:.2f}km, Remaining SOC: {remaining_soc:.1f}%")
+    
+    if len(paths) == 0:
+        print("No feasible paths found. This could be due to:")
+        print("1. Battery constraints too restrictive")
+        print("2. Distance too far for the given battery settings")
+        print("3. No charging stations available along the route")
+        print("4. Energy consumption rate too high for the distance")
     
     return paths, costs, infeasible_paths_info, socs
 
@@ -477,8 +484,10 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             
             print(f"\nGeocoding start address: {start_address}")
             start_coords = geocode_address(start_address + ", BC, Canada")
+            print(f"Start coordinates: {start_coords}")
             print(f"Geocoding end address: {end_address}")
             end_coords = geocode_address(end_address + ", BC, Canada")
+            print(f"End coordinates: {end_coords}")
             
             if not start_coords or not end_coords:
                 print("Error: Could not geocode one or both addresses.")
@@ -500,6 +509,24 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             
             print(f"Start node: {start_node} (distance: {start_dist:.2f}m)")
             print(f"End node: {end_node} (distance: {end_dist:.2f}m)")
+            
+            if start_node is None or end_node is None:
+                print("ERROR: Could not find nodes in road network for the provided coordinates")
+                return None, None, None, None, "invalid_address", None
+            
+            # Calculate straight-line distance between start and end
+            start_lat, start_lon = start_coords
+            end_lat, end_lon = end_coords
+            straight_line_distance_km = haversine_distance(start_lat, start_lon, end_lat, end_lon) / 1000
+            print(f"Straight-line distance: {straight_line_distance_km:.2f} km")
+            
+            # Calculate maximum possible distance with current battery
+            max_distance_km = (initial_soc - threshold_soc) / energy_consumption
+            print(f"Maximum possible distance with current battery: {max_distance_km:.2f} km")
+            
+            if straight_line_distance_km > max_distance_km:
+                print(f"WARNING: Straight-line distance ({straight_line_distance_km:.2f} km) exceeds maximum possible distance ({max_distance_km:.2f} km)")
+                print("This route will require charging stops.")
             
             nearest_stations = {}
             road_network_nodes = set(road_network.nodes())
@@ -525,62 +552,45 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             print("Checking if start and end nodes are connected...")
             try:
                 test_path = nx.shortest_path(road_network, start_node, end_node)
-                print(f"Start and end nodes are connected with a path")
+                print(f"Start and end nodes are connected with a path of length {len(test_path)}")
             except nx.NetworkXNoPath:
-                print("No path exists between start and end nodes!")
+                print("No direct path exists between start and end nodes!")
+                print("This could be due to:")
+                print("1. Start and end points are in different disconnected regions")
+                print("2. Road network data is incomplete")
+                print("3. Points are outside the covered area")
+                
+                # Check connected components
                 connected_components = list(nx.weakly_connected_components(road_network))
+                print(f"Road network has {len(connected_components)} connected components")
+                
                 start_component = None
                 end_component = None
                 
                 for i, component in enumerate(connected_components):
                     if start_node in component:
                         start_component = i
+                        print(f"Start node is in component {i} (size: {len(component)})")
                     if end_node in component:
                         end_component = i
-                
-                print(f"Start node is in component {start_component}, end node is in component {end_component}")
-                print(f"Total number of components: {len(connected_components)}")
+                        print(f"End node is in component {i} (size: {len(component)})")
                 
                 if start_component is not None and end_component is not None and start_component != end_component:
-                    print("Start and end nodes are in different connected components!")
-                    largest_component = max(connected_components, key=len)
-                    print(f"Largest component has {len(largest_component)} nodes")
-                    
-                    new_start_node = None
-                    new_end_node = None
-                    min_start_dist = float('inf')
-                    min_end_dist = float('inf')
-                    
-                    for node in largest_component:
-                        node_lat = road_network.nodes[node]['y']
-                        node_lon = road_network.nodes[node]['x']
-                        
-                        start_dist = haversine_distance(start_lat, start_lon, node_lat, node_lon)
-                        end_dist = haversine_distance(end_lat, end_lon, node_lat, node_lon)
-                        
-                        if start_dist < min_start_dist:
-                            min_start_dist = start_dist
-                            new_start_node = node
-                        
-                        if end_dist < min_end_dist:
-                            min_end_dist = end_dist
-                            new_end_node = node
-                    
-                    if new_start_node and new_end_node:
-                        print(f"Using alternative start node at distance {min_start_dist:.2f}m")
-                        print(f"Using alternative end node at distance {min_end_dist:.2f}m")
-                        start_node = new_start_node
-                        end_node = new_end_node
-                    else:
-                        print("Could not find suitable alternative nodes")
-                        return None, None, None, None, "invalid_address", None
+                    print(f"Start and end nodes are in different components ({start_component} vs {end_component})")
+                    print("This is why no valid paths can be found.")
+                    return None, None, None, None, "invalid_address", None
                 
+                # If we get here, both nodes are in the same component but no path exists
+                print("Both nodes are in the same component but no path exists - this is unusual")
                 return None, None, None, None, "invalid_address", None
             
             print("Finding Pareto optimal paths...")
             paths, costs, infeasible_paths_info, remaining_socs = find_pareto_paths(road_network, nearest_stations, start_node, end_node,
                                                                 max_paths=10, initial_soc=initial_soc, 
                                                                 threshold_soc=threshold_soc, energy_consumption=energy_consumption)
+            
+            print(f"Found {len(paths) if paths else 0} feasible paths")
+            print(f"Found {len(infeasible_paths_info) if infeasible_paths_info else 0} infeasible paths")
             
             if not paths and infeasible_paths_info:
                 print("\n\nNo feasible direct paths found. Attempting two-segment route with charging station...")
