@@ -472,8 +472,21 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
     geocodes the start and end addresses, and then calls the route_planning function to find the optimal paths. 
     
     """
+    print(f"=== Starting route planning ===")
+    print(f"Input parameters:")
+    print(f"  Start: {start_address}")
+    print(f"  End: {end_address}")
+    print(f"  Initial SOC: {initial_soc}%")
+    print(f"  Threshold SOC: {threshold_soc}%")
+    print(f"  Energy consumption: {energy_consumption}%/km")
+    
     try:
+        print("Loading BC province data...")
         road_network, charging_stations, intersections = load_bc_province_data()
+        print(f"Data loading result:")
+        print(f"  Road network: {'Loaded' if road_network else 'Failed'}")
+        print(f"  Charging stations: {'Loaded' if charging_stations else 'Failed'}")
+        print(f"  Intersections: {'Loaded' if intersections else 'Failed'}")
         
         if road_network and charging_stations and intersections:
             print(f"Planning route from {start_address} to {end_address}")
@@ -729,11 +742,12 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             return road_network, charging_stations, paths, costs, map_filename, legend_html
         
         else:
-            print("BC region data not found. Please load it first.")
+            print("ERROR: BC region data not found. Please load it first.")
+            print("This is likely because the data files are not in the correct location.")
             return None, None, None, None, "error", None
             
     except Exception as e:
-        print(f"General error: {str(e)}")
+        print(f"ERROR in test_route_planning: {str(e)}")
         import traceback
         traceback.print_exc()
         return None, None, None, None, "invalid_address", None
@@ -759,6 +773,7 @@ def load_bc_province_data(force_reload=False):
     
     # Get the directory where this script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"Script directory: {script_dir}")
     
     bc_files = [
         os.path.join(script_dir, 'roads_bc_regions.json'),
@@ -766,10 +781,15 @@ def load_bc_province_data(force_reload=False):
         os.path.join(script_dir, 'intersections_bc_regions.json')
     ]
     
+    print("Checking for data files:")
+    for f in bc_files:
+        exists = os.path.exists(f)
+        print(f"  {f}: {'EXISTS' if exists else 'MISSING'}")
+    
     bc_files_exist = all(os.path.exists(f) for f in bc_files)
     
     if not bc_files_exist:
-        print("Error: Required data files not found. Please ensure the following files exist:")
+        print("ERROR: Required data files not found. Please ensure the following files exist:")
         for f in bc_files:
             print(f"- {f}")
         return None, None, None
