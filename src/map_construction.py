@@ -277,7 +277,9 @@ def find_pareto_paths(G, nearest_stations, start_node, end_node, max_paths, init
                             last_node_info = f"Coordinates: ({node_data['y']:.6f}, {node_data['x']:.6f})"
                             
                             try:
-                                with open('charging_stations_bc_regions.json', 'r') as f:
+                                script_dir = os.path.dirname(os.path.abspath(__file__))
+                                charging_stations_file = os.path.join(script_dir, 'charging_stations_bc_regions.json')
+                                with open(charging_stations_file, 'r') as f:
                                     charging_stations = json.load(f)
                                 
                                 nearest_station = find_nearest_charging_station(
@@ -745,21 +747,25 @@ def load_bc_province_data(force_reload=False):
     
     print("Loading BC province data from local files...")
     
-    bc_files_exist = all(os.path.exists(f) for f in [
-        'roads_bc_regions.json', 
-        'charging_stations_bc_regions.json', 
-        'intersections_bc_regions.json'
-    ])
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    bc_files = [
+        os.path.join(script_dir, 'roads_bc_regions.json'),
+        os.path.join(script_dir, 'charging_stations_bc_regions.json'),
+        os.path.join(script_dir, 'intersections_bc_regions.json')
+    ]
+    
+    bc_files_exist = all(os.path.exists(f) for f in bc_files)
     
     if not bc_files_exist:
         print("Error: Required data files not found. Please ensure the following files exist:")
-        print("- roads_bc_regions.json")
-        print("- charging_stations_bc_regions.json")
-        print("- intersections_bc_regions.json")
+        for f in bc_files:
+            print(f"- {f}")
         return None, None, None
 
     try:
-        with open('roads_bc_regions.json', 'r', encoding='utf-8') as f:
+        with open(bc_files[0], 'r', encoding='utf-8') as f:
             road_data = json.load(f)
         
         road_network = nx.MultiDiGraph()
@@ -792,12 +798,12 @@ def load_bc_province_data(force_reload=False):
         
         print(f"Loaded road network with {len(road_network.nodes)} nodes and {len(road_network.edges)} edges")
         
-        with open('charging_stations_bc_regions.json', 'r') as f:
+        with open(bc_files[1], 'r') as f:
             charging_stations = json.load(f)
         
         print(f"Loaded {len(charging_stations)} charging stations")
         
-        with open('intersections_bc_regions.json', 'r') as f:
+        with open(bc_files[2], 'r') as f:
             intersections = json.load(f)
         
         print(f"Loaded {len(intersections)} intersections")

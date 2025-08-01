@@ -4,11 +4,13 @@ import os
 from map_construction import test_route_planning
 
 app = Flask(__name__)
-CORS(app)  # Allow cross-origin requests (from React)
+CORS(app, origins=["https://yr2.vercel.app", "http://localhost:5173", "http://localhost:3000"])  # Allow cross-origin requests (from React)
 
 @app.route("/")
 def home():
     return "Welcome to the EV Planner API. Use the /generate-route endpoint to generate routes."
+
+
 
 @app.route("/generate-route", methods=["POST"])
 def generate_route():
@@ -39,7 +41,8 @@ def generate_route():
             # Extract just the filename from the full path
             filename = os.path.basename(map_file)
             # Return URL pointing to Flask server
-            url = f"http://localhost:5000/maps/{filename}"
+            base_url = os.environ.get("BASE_URL", "https://evplanner-1.onrender.com")
+            url = f"{base_url}/maps/{filename}"
             print(f"Generated map URL: {url} for file: {map_file}")
             return url
 

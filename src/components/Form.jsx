@@ -310,7 +310,7 @@ export default function Form({ start, destination, onStartChange, onDestinationC
         destination,
         ...formData,
       };
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/generate-route`, payload);
+      const response = await axios.post(`https://evplanner-1.onrender.com/generate-route`, payload);
       const { success, map_urls, legend_htmls, error } = response.data;
       if (success) {
         setMapUrls(map_urls || []);
