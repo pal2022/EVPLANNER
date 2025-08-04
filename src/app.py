@@ -4,11 +4,15 @@ import os
 from map_construction import test_route_planning
 
 app = Flask(__name__)
-CORS(app, origins=["https://yr2.vercel.app", "http://localhost:5173", "http://localhost:3000"])  # Allow cross-origin requests (from React)
+CORS(app, origins=["https://yr2.vercel.app", "http://localhost:5173", "http://localhost:3000"], supports_credentials=True)  # Allow cross-origin requests (from React)
 
 @app.route("/")
 def home():
     return "Welcome to the EV Planner API. Use the /generate-route endpoint to generate routes."
+
+@app.route("/test")
+def test():
+    return jsonify({"status": "ok", "message": "API is working"})
 
 
 
