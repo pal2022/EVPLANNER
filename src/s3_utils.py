@@ -19,7 +19,14 @@ class S3DataLoader:
             region_name (str): AWS region (defaults to environment variable)
         """
         self.bucket_name = bucket_name or os.environ.get('S3_BUCKET_NAME', 'ev-planner-json-files')
-        self.region_name = region_name or os.environ.get('AWS_REGION', 'us-east-1')
+        # Get region and clean it up (remove display name if present)
+        raw_region = region_name or os.environ.get('AWS_REGION', 'us-east-1')
+        # Extract just the region code (e.g., "ca-central-1" from "Canada (Central) ca-central-1")
+        if ' ' in raw_region:
+            # Split by space and take the last part which should be the region code
+            self.region_name = raw_region.split()[-1]
+        else:
+            self.region_name = raw_region
         
         # Initialize S3 client
         try:
