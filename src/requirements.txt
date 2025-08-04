@@ -11,3 +11,4 @@ pandas
 geopandas
 rtree 
 gunicorn
+boto3

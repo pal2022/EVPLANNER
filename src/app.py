@@ -14,45 +14,24 @@ def home():
 
 @app.route("/generate-route", methods=["POST"])
 def generate_route():
-    print("=== Flask route handler called ===")
     try:
-        print("Parsing request data...")
         # Parse input from React frontend form (now expects JSON)
         data = request.get_json()
-        print(f"Received data: {data}")
-        
         start = data.get("start")
         destination = data.get("destination")
         initial_soc = float(data.get("initial_soc"))
         threshold_soc = float(data.get("threshold_soc"))
         consumption_rate = float(data.get("consumption_rate"))
-        
-        print(f"Parsed parameters:")
-        print(f"  Start: {start}")
-        print(f"  Destination: {destination}")
-        print(f"  Initial SOC: {initial_soc}")
-        print(f"  Threshold SOC: {threshold_soc}")
-        print(f"  Consumption Rate: {consumption_rate}")
 
-        print("Calling test_route_planning...")
         # Call existing route planning function
         road_network, charging_stations, paths, costs, map_filenames_or_status, legend_htmls = test_route_planning(
             start, destination, initial_soc, threshold_soc, consumption_rate
         )
-        print(f"test_route_planning returned:")
-        print(f"  road_network: {'Loaded' if road_network else 'None'}")
-        print(f"  charging_stations: {'Loaded' if charging_stations else 'None'}")
-        print(f"  paths: {len(paths) if paths else 'None'}")
-        print(f"  costs: {len(costs) if costs else 'None'}")
-        print(f"  map_filenames_or_status: {map_filenames_or_status}")
-        print(f"  legend_htmls: {'Present' if legend_htmls else 'None'}")
 
         if map_filenames_or_status == "invalid_address":
-            print("ERROR: Invalid address")
             return jsonify({"success": False, "error": "Invalid address entered. Please check your start or destination address."})
 
         if paths is None:
-            print("ERROR: No valid paths found")
             return jsonify({"success": False, "error": "No valid paths found."})
 
         map_urls = []
@@ -99,9 +78,7 @@ def generate_route():
         })
 
     except Exception as e:
-        print(f"ERROR in Flask route handler: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Server error: {e}")
         return jsonify({"success": False, "error": str(e)})
 
 @app.route('/maps/<path:filename>')

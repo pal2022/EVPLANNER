@@ -11,6 +11,7 @@ import os
 from queue import PriorityQueue
 import re
 import map_renderer
+from s3_utils import get_s3_loader
 
 
 SAFETY_FACTOR = 0.85 # Safety margin factor for available SOC when planning detours
@@ -435,19 +436,12 @@ def find_pareto_paths(G, nearest_stations, start_node, end_node, max_paths, init
     
     paths, costs, socs = filter_similar_routes(paths, costs, socs)
 
-    print(f"\nPareto-optimal paths found: {len(paths)}")
+    print("\nPareto-optimal paths:")
     for i, (path, cost) in enumerate(zip(paths, costs)):
         remaining_soc = calculate_remaining_soc(path, G, initial_soc, energy_consumption)
         
         safety_km = cost['safety'] / 1000
         print(f"Path {i+1}: Travel time: {cost['time']:.1f}s, Safety: {safety_km:.2f}km, Remaining SOC: {remaining_soc:.1f}%")
-    
-    if len(paths) == 0:
-        print("No feasible paths found. This could be due to:")
-        print("1. Battery constraints too restrictive")
-        print("2. Distance too far for the given battery settings")
-        print("3. No charging stations available along the route")
-        print("4. Energy consumption rate too high for the distance")
     
     return paths, costs, infeasible_paths_info, socs
 
@@ -497,10 +491,8 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             
             print(f"\nGeocoding start address: {start_address}")
             start_coords = geocode_address(start_address + ", BC, Canada")
-            print(f"Start coordinates: {start_coords}")
             print(f"Geocoding end address: {end_address}")
             end_coords = geocode_address(end_address + ", BC, Canada")
-            print(f"End coordinates: {end_coords}")
             
             if not start_coords or not end_coords:
                 print("Error: Could not geocode one or both addresses.")
@@ -527,20 +519,6 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
                 print("ERROR: Could not find nodes in road network for the provided coordinates")
                 return None, None, None, None, "invalid_address", None
             
-            # Calculate straight-line distance between start and end
-            start_lat, start_lon = start_coords
-            end_lat, end_lon = end_coords
-            straight_line_distance_km = haversine_distance(start_lat, start_lon, end_lat, end_lon) / 1000
-            print(f"Straight-line distance: {straight_line_distance_km:.2f} km")
-            
-            # Calculate maximum possible distance with current battery
-            max_distance_km = (initial_soc - threshold_soc) / energy_consumption
-            print(f"Maximum possible distance with current battery: {max_distance_km:.2f} km")
-            
-            if straight_line_distance_km > max_distance_km:
-                print(f"WARNING: Straight-line distance ({straight_line_distance_km:.2f} km) exceeds maximum possible distance ({max_distance_km:.2f} km)")
-                print("This route will require charging stops.")
-            
             nearest_stations = {}
             road_network_nodes = set(road_network.nodes())
             
@@ -565,45 +543,62 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
             print("Checking if start and end nodes are connected...")
             try:
                 test_path = nx.shortest_path(road_network, start_node, end_node)
-                print(f"Start and end nodes are connected with a path of length {len(test_path)}")
+                print(f"Start and end nodes are connected with a path")
             except nx.NetworkXNoPath:
-                print("No direct path exists between start and end nodes!")
-                print("This could be due to:")
-                print("1. Start and end points are in different disconnected regions")
-                print("2. Road network data is incomplete")
-                print("3. Points are outside the covered area")
-                
-                # Check connected components
+                print("No path exists between start and end nodes!")
                 connected_components = list(nx.weakly_connected_components(road_network))
-                print(f"Road network has {len(connected_components)} connected components")
-                
                 start_component = None
                 end_component = None
                 
                 for i, component in enumerate(connected_components):
                     if start_node in component:
                         start_component = i
-                        print(f"Start node is in component {i} (size: {len(component)})")
                     if end_node in component:
                         end_component = i
-                        print(f"End node is in component {i} (size: {len(component)})")
+                
+                print(f"Start node is in component {start_component}, end node is in component {end_component}")
+                print(f"Total number of components: {len(connected_components)}")
                 
                 if start_component is not None and end_component is not None and start_component != end_component:
-                    print(f"Start and end nodes are in different components ({start_component} vs {end_component})")
-                    print("This is why no valid paths can be found.")
-                    return None, None, None, None, "invalid_address", None
+                    print("Start and end nodes are in different connected components!")
+                    largest_component = max(connected_components, key=len)
+                    print(f"Largest component has {len(largest_component)} nodes")
+                    
+                    new_start_node = None
+                    new_end_node = None
+                    min_start_dist = float('inf')
+                    min_end_dist = float('inf')
+                    
+                    for node in largest_component:
+                        node_lat = road_network.nodes[node]['y']
+                        node_lon = road_network.nodes[node]['x']
+                        
+                        start_dist = haversine_distance(start_lat, start_lon, node_lat, node_lon)
+                        end_dist = haversine_distance(end_lat, end_lon, node_lat, node_lon)
+                        
+                        if start_dist < min_start_dist:
+                            min_start_dist = start_dist
+                            new_start_node = node
+                        
+                        if end_dist < min_end_dist:
+                            min_end_dist = end_dist
+                            new_end_node = node
+                    
+                    if new_start_node and new_end_node:
+                        print(f"Using alternative start node at distance {min_start_dist:.2f}m")
+                        print(f"Using alternative end node at distance {min_end_dist:.2f}m")
+                        start_node = new_start_node
+                        end_node = new_end_node
+                    else:
+                        print("Could not find suitable alternative nodes")
+                        return None, None, None, None, "invalid_address", None
                 
-                # If we get here, both nodes are in the same component but no path exists
-                print("Both nodes are in the same component but no path exists - this is unusual")
                 return None, None, None, None, "invalid_address", None
             
             print("Finding Pareto optimal paths...")
             paths, costs, infeasible_paths_info, remaining_socs = find_pareto_paths(road_network, nearest_stations, start_node, end_node,
                                                                 max_paths=10, initial_soc=initial_soc, 
                                                                 threshold_soc=threshold_soc, energy_consumption=energy_consumption)
-            
-            print(f"Found {len(paths) if paths else 0} feasible paths")
-            print(f"Found {len(infeasible_paths_info) if infeasible_paths_info else 0} infeasible paths")
             
             if not paths and infeasible_paths_info:
                 print("\n\nNo feasible direct paths found. Attempting two-segment route with charging station...")
@@ -754,7 +749,7 @@ def test_route_planning(start_address, end_address, initial_soc, threshold_soc, 
 
 def load_bc_province_data(force_reload=False):
     """
-    Load BC province data files from local storage with caching
+    Load BC province data - try S3 first, then local files, then generate from OSM if needed
     
     Parameters:
     force_reload (bool): Whether to force reload data even if cached
@@ -769,31 +764,120 @@ def load_bc_province_data(force_reload=False):
         print("Using cached data (road network, charging stations, intersections)")
         return _cached_road_network, _cached_charging_stations, _cached_intersections
     
-    print("Loading BC province data from local files...")
+    print("Loading BC province data...")
     
     # Get the directory where this script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Script directory: {script_dir}")
     
+    # Try S3 first
+    try:
+        print("Attempting to load data from S3...")
+        s3_loader = get_s3_loader()
+        
+        # Check if files exist in S3
+        s3_files = [
+            'roads_bc_regions.json',
+            'charging_stations_bc_regions.json',
+            'intersections_bc_regions.json'
+        ]
+        
+        all_s3_files_exist = all(s3_loader.file_exists(f) for f in s3_files)
+        
+        if all_s3_files_exist:
+            print("All required files found in S3. Loading from S3...")
+            return load_from_s3_files(s3_loader, s3_files)
+        else:
+            print("Some files missing from S3. Checking local files...")
+    except Exception as e:
+        print(f"Error accessing S3: {e}. Falling back to local files...")
+    
+    # Try local files as fallback
     bc_files = [
         os.path.join(script_dir, 'roads_bc_regions.json'),
         os.path.join(script_dir, 'charging_stations_bc_regions.json'),
         os.path.join(script_dir, 'intersections_bc_regions.json')
     ]
     
-    print("Checking for data files:")
+    print("Checking for local data files:")
     for f in bc_files:
         exists = os.path.exists(f)
         print(f"  {f}: {'EXISTS' if exists else 'MISSING'}")
     
     bc_files_exist = all(os.path.exists(f) for f in bc_files)
     
-    if not bc_files_exist:
-        print("ERROR: Required data files not found. Please ensure the following files exist:")
-        for f in bc_files:
-            print(f"- {f}")
+    if bc_files_exist:
+        print("Loading from local files...")
+        return load_from_local_files(bc_files)
+    else:
+        print("Local files not found. Trying to download from cloud storage...")
+        downloaded = download_data_files(script_dir)
+        if downloaded:
+            print("Successfully downloaded data files. Loading...")
+            return load_from_local_files(bc_files)
+        else:
+            print("Could not download files. Generating data from OSM...")
+            return generate_bc_data_from_osm()
+
+def load_from_s3_files(s3_loader, s3_files):
+    """Load data from S3 JSON files"""
+    try:
+        print("Loading road network from S3...")
+        road_data = s3_loader.download_json_file(s3_files[0])
+        
+        road_network = nx.MultiDiGraph()
+        
+        for node_id, node_data in road_data['nodes'].items():
+            road_network.add_node(int(node_id) if node_id.isdigit() else node_id, **node_data)
+        
+        for edge in road_data['edges']:
+            source = int(edge['source']) if edge['source'].isdigit() else edge['source']
+            target = int(edge['target']) if edge['target'].isdigit() else edge['target']
+            key = edge['key']
+            
+            edge_data = {k: v for k, v in edge.items() if k not in ['source', 'target', 'key']}
+            
+            if 'geometry' in edge_data and isinstance(edge_data['geometry'], str):
+                try:
+                    edge_data['geometry'] = wkt.loads(edge_data['geometry'])
+                except:
+                    del edge_data['geometry']
+            
+            if 'travel_time' not in edge_data:
+                if 'length' in edge_data:
+                    length = edge_data['length']  
+                    speed = 13.89  
+                    edge_data['travel_time'] = length / speed  
+                else:
+                    edge_data['travel_time'] = 60 
+            
+            road_network.add_edge(source, target, key=key, **edge_data)
+        
+        print(f"Loaded road network with {len(road_network.nodes)} nodes and {len(road_network.edges)} edges")
+        
+        print("Loading charging stations from S3...")
+        charging_stations = s3_loader.download_json_file(s3_files[1])
+        print(f"Loaded {len(charging_stations)} charging stations")
+        
+        print("Loading intersections from S3...")
+        intersections = s3_loader.download_json_file(s3_files[2])
+        print(f"Loaded {len(intersections)} intersections")
+        
+        # Cache the data
+        _cached_road_network = road_network
+        _cached_charging_stations = charging_stations
+        _cached_intersections = intersections
+        
+        return road_network, charging_stations, intersections
+        
+    except Exception as e:
+        print(f"Error loading data from S3: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None, None, None
 
+def load_from_local_files(bc_files):
+    """Load data from local JSON files"""
     try:
         with open(bc_files[0], 'r', encoding='utf-8') as f:
             road_data = json.load(f)
@@ -850,6 +934,151 @@ def load_bc_province_data(force_reload=False):
         import traceback
         traceback.print_exc()
         return None, None, None
+
+def generate_bc_data_from_osm():
+    """Generate BC road network data from OSM"""
+    try:
+        print("Downloading BC road network from OSM...")
+        
+        # Define BC bounding box (approximate)
+        north, south, east, west = 60.0, 48.0, -114.0, -139.0
+        
+        # Download road network for BC
+        road_network = ox.graph_from_bbox(north, south, east, west, network_type='drive')
+        
+        print(f"Downloaded road network with {len(road_network.nodes)} nodes and {len(road_network.edges)} edges")
+        
+        # Add travel time to edges
+        for u, v, k, data in road_network.edges(data=True, keys=True):
+            if 'length' in data:
+                length = data['length']
+                # Estimate speed based on road type
+                road_type = data.get('highway', 'residential')
+                speed = {
+                    'motorway': 100,
+                    'trunk': 80,
+                    'primary': 50,
+                    'secondary': 50,
+                    'tertiary': 50,
+                }.get(road_type, 30)
+                speed_ms = speed * 1000 / 3600
+                data['travel_time'] = length / speed_ms if speed_ms > 0 else 60
+            else:
+                data['travel_time'] = 60
+        
+        # Generate simple charging stations (you can enhance this)
+        charging_stations = generate_sample_charging_stations(road_network)
+        
+        # Generate intersections data
+        intersections = generate_intersections_data(road_network, charging_stations)
+        
+        # Cache the data
+        _cached_road_network = road_network
+        _cached_charging_stations = charging_stations
+        _cached_intersections = intersections
+        
+        return road_network, charging_stations, intersections
+        
+    except Exception as e:
+        print(f"Error generating data from OSM: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None, None, None
+
+def generate_sample_charging_stations(road_network):
+    """Generate sample charging stations for BC"""
+    charging_stations = []
+    
+    # Get some major cities in BC
+    bc_cities = [
+        {"name": "Vancouver", "lat": 49.2827, "lon": -123.1207},
+        {"name": "Victoria", "lat": 48.4284, "lon": -123.3656},
+        {"name": "Burnaby", "lat": 49.2488, "lon": -122.9805},
+        {"name": "Richmond", "lat": 49.1666, "lon": -123.1336},
+        {"name": "Surrey", "lat": 49.1913, "lon": -122.8490},
+        {"name": "Coquitlam", "lat": 49.2838, "lon": -122.7932},
+        {"name": "Kelowna", "lat": 49.8877, "lon": -119.4960},
+        {"name": "Nanaimo", "lat": 49.1659, "lon": -123.9401},
+        {"name": "Kamloops", "lat": 50.6745, "lon": -120.3273},
+        {"name": "Prince George", "lat": 53.9166, "lon": -122.7497}
+    ]
+    
+    for city in bc_cities:
+        # Add multiple charging stations per city
+        for i in range(3):
+            station = {
+                "name": f"{city['name']} Charging Station {i+1}",
+                "location": {
+                    "latitude": city['lat'] + (i * 0.01),  # Slight offset
+                    "longitude": city['lon'] + (i * 0.01)
+                },
+                "type": "Level 2",
+                "power": "7.2 kW"
+            }
+            charging_stations.append(station)
+    
+    print(f"Generated {len(charging_stations)} sample charging stations")
+    return charging_stations
+
+def download_data_files(script_dir):
+    """Download data files from cloud storage"""
+    try:
+        # You can replace these URLs with your actual file URLs
+        # For now, using placeholder URLs - you'll need to upload your files and get real URLs
+        file_urls = {
+            'roads_bc_regions.json': 'https://your-storage-url/roads_bc_regions.json',
+            'charging_stations_bc_regions.json': 'https://your-storage-url/charging_stations_bc_regions.json',
+            'intersections_bc_regions.json': 'https://your-storage-url/intersections_bc_regions.json'
+        }
+        
+        print("Attempting to download data files...")
+        
+        for filename, url in file_urls.items():
+            if url.startswith('https://your-storage-url'):
+                print(f"Skipping {filename} - URL not configured")
+                continue
+                
+            filepath = os.path.join(script_dir, filename)
+            print(f"Downloading {filename} from {url}")
+            
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            
+            with open(filepath, 'wb') as f:
+                f.write(response.content)
+            
+            print(f"Successfully downloaded {filename}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error downloading files: {str(e)}")
+        return False
+
+def generate_intersections_data(road_network, charging_stations):
+    """Generate intersections data with nearest charging stations"""
+    intersections = {}
+    
+    for node in road_network.nodes():
+        node_data = road_network.nodes[node]
+        if 'y' in node_data and 'x' in node_data:
+            node_lat = node_data['y']
+            node_lon = node_data['x']
+            
+            # Find nearest charging station
+            nearest_station = find_nearest_charging_station(node_lat, node_lon, charging_stations)
+            
+            if nearest_station:
+                intersections[str(node)] = {
+                    "nearest_charging_station": {
+                        "name": nearest_station['name'],
+                        "location": nearest_station['location'],
+                        "distance": nearest_station.get('distance', 0)
+                    }
+                }
+    
+    print(f"Generated intersections data for {len(intersections)} nodes")
+    return intersections
 
 def calculate_remaining_soc(path, road_network, initial_soc, energy_consumption):
     """
