@@ -18,14 +18,18 @@ def test():
 
 @app.route("/generate-route", methods=["POST"])
 def generate_route():
+    print(f"Received POST request to /generate-route")
+    print(f"Request headers: {dict(request.headers)}")
     try:
         # Parse input from React frontend form (now expects JSON)
         data = request.get_json()
+        print(f"Received data: {data}")
         start = data.get("start")
         destination = data.get("destination")
         initial_soc = float(data.get("initial_soc"))
         threshold_soc = float(data.get("threshold_soc"))
         consumption_rate = float(data.get("consumption_rate"))
+        print(f"Parsed values - start: {start}, destination: {destination}, initial_soc: {initial_soc}, threshold_soc: {threshold_soc}, consumption_rate: {consumption_rate}")
 
         # Call existing route planning function
         road_network, charging_stations, paths, costs, map_filenames_or_status, legend_htmls = test_route_planning(

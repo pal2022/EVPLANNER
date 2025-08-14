@@ -311,6 +311,8 @@ export default function Form({ start, destination, onStartChange, onDestinationC
         ...formData,
       };
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://evplanner-1.onrender.com';
+      console.log('Making request to:', `${backendUrl}/generate-route`);
+      console.log('Payload:', payload);
       const response = await axios.post(`${backendUrl}/generate-route`, payload);
       const { success, map_urls, legend_htmls, error } = response.data;
       if (success) {
@@ -320,7 +322,9 @@ export default function Form({ start, destination, onStartChange, onDestinationC
         setError(error || 'Something went wrong.');
       }
     } catch (err) {
-      setError('Failed to connect to the server.');
+      console.error('Request failed:', err);
+      console.error('Error response:', err.response);
+      setError(`Failed to connect to the server. ${err.message}`);
     } finally {
       setLoading(false);
     }
