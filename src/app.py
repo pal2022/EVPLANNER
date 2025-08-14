@@ -16,9 +16,7 @@ def test():
 
 
 
-@app.route("/map", methods=["POST"])
-#@app.route("/generate-route", methods=["POST"])
-
+@app.route("/generate-route", methods=["POST"])
 def generate_route():
     print(f"Received POST request to /generate-route")
     print(f"Request headers: {dict(request.headers)}")
