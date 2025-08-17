@@ -4,7 +4,21 @@ import os
 from map_construction import test_route_planning
 
 app = Flask(__name__)
-CORS(app, origins=["https://yr2.vercel.app", "http://localhost:5173", "http://localhost:3000"], supports_credentials=True)  # Allow cross-origin requests (from React)
+
+# More flexible CORS configuration
+allowed_origins = [
+    "https://yr2.vercel.app",
+    "https://*.vercel.app",  # Allow all Vercel subdomains
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5000"
+]
+
+CORS(app, 
+     origins=allowed_origins, 
+     supports_credentials=True,
+     methods=["GET", "POST", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"])
 
 @app.route("/")
 def home():
