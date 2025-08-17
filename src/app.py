@@ -4,30 +4,7 @@ import os
 from map_construction import test_route_planning
 
 app = Flask(__name__)
-
-# More flexible CORS configuration
-allowed_origins = [
-    "https://yr2.vercel.app",
-    "https://*.vercel.app",  # Allow all Vercel subdomains
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:5000"
-]
-
-CORS(app, 
-     origins=allowed_origins, 
-     supports_credentials=True,
-     methods=["GET", "POST", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"])
-
-# Add a general OPTIONS handler for all routes
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://yr2.vercel.app')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
+CORS(app)  # This enables CORS for all routes and all origins by default
 
 @app.route("/")
 def home():
@@ -37,19 +14,8 @@ def home():
 def test():
     return jsonify({"status": "ok", "message": "API is working"})
 
-
-
-@app.route("/generate-route", methods=["POST", "OPTIONS"])
+@app.route("/generate-route", methods=["POST"])
 def generate_route():
-    # Handle preflight OPTIONS request
-    if request.method == "OPTIONS":
-        response = jsonify({"status": "ok"})
-        response.headers.add("Access-Control-Allow-Origin", "https://yr2.vercel.app")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-        response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
-        response.headers.add("Access-Control-Allow-Credentials", "true")
-        return response
-    
     print(f"Received POST request to /generate-route")
     print(f"Request headers: {dict(request.headers)}")
     try:
