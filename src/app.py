@@ -20,6 +20,15 @@ CORS(app,
      methods=["GET", "POST", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"])
 
+# Add a general OPTIONS handler for all routes
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://yr2.vercel.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
+
 @app.route("/")
 def home():
     return "Welcome to the EV Planner API. Use the /generate-route endpoint to generate routes."
@@ -30,8 +39,17 @@ def test():
 
 
 
-@app.route("/generate-route", methods=["POST"])
+@app.route("/generate-route", methods=["POST", "OPTIONS"])
 def generate_route():
+    # Handle preflight OPTIONS request
+    if request.method == "OPTIONS":
+        response = jsonify({"status": "ok"})
+        response.headers.add("Access-Control-Allow-Origin", "https://yr2.vercel.app")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
+        response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
+    
     print(f"Received POST request to /generate-route")
     print(f"Request headers: {dict(request.headers)}")
     try:
