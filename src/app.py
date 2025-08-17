@@ -4,7 +4,7 @@ import os
 from map_construction import test_route_planning
 
 app = Flask(__name__)
-CORS(app)  # This enables CORS for all routes and all origins by default
+CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 
 @app.route("/")
 def home():
@@ -13,6 +13,11 @@ def home():
 @app.route("/test")
 def test():
     return jsonify({"status": "ok", "message": "API is working"})
+
+@app.route("/generate-route", methods=["OPTIONS"])
+def generate_route_options():
+    response = jsonify({"status": "ok"})
+    return response
 
 @app.route("/generate-route", methods=["POST"])
 def generate_route():
