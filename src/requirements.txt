@@ -1,5 +1,4 @@
 flask
-flask-cors
 folium
 osmnx
 networkx
@@ -10,5 +9,18 @@ numpy
 pandas
 geopandas
 rtree 
-gunicorn
-boto3
+
+# flask
+# flask-cors
+# folium
+# osmnx
+# networkx
+# shapely
+# requests
+# matplotlib
+# numpy
+# pandas
+# geopandas
+# rtree 
+# gunicorn
+# boto3
