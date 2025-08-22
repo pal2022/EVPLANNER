@@ -274,7 +274,25 @@
 </head>
 <body>
 
-<h1>EV Route Planner</h1>
+<div style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.5rem; color: #2563eb;">⚡</span>
+        <span style="font-family: 'Arial', sans-serif; font-size: 1.2rem; font-weight: 700; color: #2563eb; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+            ParetoRouteChoice
+        </span>
+    </div>
+</div>
+
+<!-- <h1>EV Route Planner</h1> -->
+
+<div style="text-align: center; margin-bottom: 2rem;">
+    <h2 style="color: #2563eb; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        Your Route, Your Rules
+    </h2>
+    <p style="color: #4b5563; font-size: 1.25rem; line-height: 1.6; max-width: 800px; margin: 0 auto; font-weight: 400;">
+        Plan your electric vehicle routes with optimized battery usage, charging stops, and real map visualizations.
+    </p>
+</div>
 
 <div id="container">
     <div id="form-section">
@@ -543,10 +561,10 @@
     
     // Initialize the map
     function initializeMap() {
-        // Center on BC regions
-        const centerLat = (BC_SOUTHWEST[0] + BC_NORTHEAST[2]) / 2;
-        const centerLng = (BC_SOUTHWEST[1] + BC_NORTHEAST[3]) / 2;
-        map = L.map('map-selector').setView([centerLat, centerLng], 6);
+        // Center and zoom on BC Southwest region specifically
+        const southwestCenterLat = (BC_SOUTHWEST[0] + BC_SOUTHWEST[2]) / 2;
+        const southwestCenterLng = (BC_SOUTHWEST[1] + BC_SOUTHWEST[3]) / 2;
+        map = L.map('map-selector').setView([southwestCenterLat, southwestCenterLng], 9);
         
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -786,10 +804,10 @@
         clearLocation('start');
         clearLocation('destination');
         
-        // Reset map view to show BC regions
-        const centerLat = (BC_SOUTHWEST[0] + BC_NORTHEAST[2]) / 2;
-        const centerLng = (BC_SOUTHWEST[1] + BC_NORTHEAST[3]) / 2;
-        map.setView([centerLat, centerLng], 6);
+        // Reset map view to show BC Southwest region
+        const southwestCenterLat = (BC_SOUTHWEST[0] + BC_SOUTHWEST[2]) / 2;
+        const southwestCenterLng = (BC_SOUTHWEST[1] + BC_SOUTHWEST[3]) / 2;
+        map.setView([southwestCenterLat, southwestCenterLng], 9);
     }
 </script>
 
