@@ -51,7 +51,7 @@
         /* Map selector styles */
         #map-selector {
             width: 100%;
-            height: 500px;
+            height: 600px;
             border: 2px solid #ddd;
             border-radius: 8px;
             position: relative;
@@ -158,6 +158,61 @@
             font-style: italic;
             font-size: 11px;
         }
+        
+        /* Smooth zoom controls styling */
+        .leaflet-control-zoom {
+            border: 2px solid rgba(0,0,0,0.2);
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+        }
+        
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .leaflet-control-zoom-in:hover,
+        .leaflet-control-zoom-out:hover {
+            background: #f4f4f4;
+            color: #2563eb;
+            transform: scale(1.05);
+        }
+        
+        .leaflet-control-zoom-in:active,
+        .leaflet-control-zoom-out:active {
+            transform: scale(0.95);
+        }
+        
+        /* Smooth transitions for map elements */
+        .leaflet-fade-anim .leaflet-tile,
+        .leaflet-fade-anim .leaflet-popup {
+            opacity: 0;
+            transition: opacity 0.2s linear;
+        }
+        
+        .leaflet-fade-anim .leaflet-tile-loaded,
+        .leaflet-fade-anim .leaflet-fade-anim .leaflet-popup {
+            opacity: 1;
+        }
+        
+        /* Smooth marker animations */
+        .leaflet-marker-icon {
+            transition: transform 0.2s ease;
+        }
+        
+        .leaflet-marker-icon:hover {
+            transform: scale(1.1);
+        }
                
         label {
             display: block;
@@ -203,7 +258,7 @@
         }
         iframe {
             width: 100%;
-            height: 500px;
+            height: 600px;
             border: none;
             display: none;
         }
@@ -242,10 +297,10 @@
                 border-left: none !important;
             }
             iframe {
-                height: 300px;    
+                height: 400px;    
             }
             #map-selector {
-                height: 300px;
+                height: 400px;
             }
         }
 
@@ -265,7 +320,7 @@
                 height: auto;
             }
             #map-selector {
-                height: 250px;
+                height: 350px;
             }
         }
 
@@ -275,16 +330,16 @@
 <body>
 
 <div style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 1.5rem; color: #2563eb;">⚡</span>
-        <span style="font-family: 'Arial', sans-serif; font-size: 1.2rem; font-weight: 700; color: #2563eb; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="../static/maps/images/logo.png" alt="ParetoRouteChoice Logo" style="width: 4.5rem; height: 4.5rem; object-fit: contain;">
+        <span style="font-family: 'Arial', sans-serif; font-size: 2.5rem; font-weight: 700; color: #2563eb; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             ParetoRouteChoice
         </span>
     </div>
 </div>
 
 <!-- <h1>EV Route Planner</h1> -->
-
+<br/>
 <div style="text-align: center; margin-bottom: 2rem;">
     <h2 style="color: #2563eb; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         Your Route, Your Rules
@@ -564,7 +619,17 @@
         // Center and zoom on BC Southwest region specifically
         const southwestCenterLat = (BC_SOUTHWEST[0] + BC_SOUTHWEST[2]) / 2;
         const southwestCenterLng = (BC_SOUTHWEST[1] + BC_SOUTHWEST[3]) / 2;
-        map = L.map('map-selector').setView([southwestCenterLat, southwestCenterLng], 9);
+        
+        // Create map with smooth zoom options
+        map = L.map('map-selector', {
+            zoomControl: true,
+            zoomSnap: 0.1,
+            zoomDelta: 0.5,
+            wheelPxPerZoomLevel: 60,
+            wheelDebounceTime: 40,
+            smoothWheelZoom: true,
+            smoothSensitivity: 1.0
+        }).setView([southwestCenterLat, southwestCenterLng], 9);
         
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -598,6 +663,65 @@
                 setDestinationLocation(lat, lng);
             }
         });
+        
+        // Add smooth zoom controls
+        addSmoothZoomControls();
+    }
+    
+    // Add smooth zoom controls to the map
+    function addSmoothZoomControls() {
+        // Create custom zoom control with smooth animations
+        const zoomInBtn = L.Control.zoomIn = L.Control.extend({
+            onAdd: function() {
+                const container = L.DomUtil.create('div', 'leaflet-control-zoom-in leaflet-control-zoom');
+                container.innerHTML = '+';
+                container.title = 'Zoom in';
+                
+                L.DomEvent.on(container, 'click', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    smoothZoom(map, 1);
+                });
+                
+                return container;
+            }
+        });
+        
+        const zoomOutBtn = L.Control.zoomOut = L.Control.extend({
+            onAdd: function() {
+                const container = L.DomUtil.create('div', 'leaflet-control-zoom-out leaflet-control-zoom');
+                container.innerHTML = '−';
+                container.title = 'Zoom out';
+                
+                L.DomEvent.on(container, 'click', function(e) {
+                    L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
+                    smoothZoom(map, -1);
+                });
+                
+                return container;
+            }
+        });
+        
+        // Add custom zoom controls to the map
+        new zoomInBtn({ position: 'topright' }).addTo(map);
+        new zoomOutBtn({ position: 'topright' }).addTo(map);
+        
+        // Remove default zoom control
+        map.removeControl(map.zoomControl);
+    }
+    
+    // Smooth zoom function
+    function smoothZoom(map, direction) {
+        const currentZoom = map.getZoom();
+        const targetZoom = Math.max(0, Math.min(18, currentZoom + direction));
+        
+        if (targetZoom !== currentZoom) {
+            map.flyTo(map.getCenter(), targetZoom, {
+                duration: 0.5,
+                easeLinearity: 0.25
+            });
+        }
     }
     
     // Add region boundaries to the map
@@ -735,9 +859,16 @@
         // Fit map to show both markers if destination exists
         if (destinationLocation) {
             const bounds = L.latLngBounds([startLocation, destinationLocation]);
-            map.fitBounds(bounds, { padding: [20, 20] });
+            map.flyToBounds(bounds, { 
+                padding: [20, 20],
+                duration: 1.0,
+                easeLinearity: 0.25
+            });
         } else {
-            map.setView([lat, lng], 10);
+            map.flyTo([lat, lng], 10, {
+                duration: 0.8,
+                easeLinearity: 0.25
+            });
         }
     }
     
@@ -770,9 +901,16 @@
         // Fit map to show both markers
         if (startLocation) {
             const bounds = L.latLngBounds([startLocation, destinationLocation]);
-            map.fitBounds(bounds, { padding: [20, 20] });
+            map.flyToBounds(bounds, { 
+                padding: [20, 20],
+                duration: 1.0,
+                easeLinearity: 0.25
+            });
         } else {
-            map.setView([lat, lng], 10);
+            map.flyTo([lat, lng], 10, {
+                duration: 0.8,
+                easeLinearity: 0.25
+            });
         }
     }
     
@@ -804,10 +942,13 @@
         clearLocation('start');
         clearLocation('destination');
         
-        // Reset map view to show BC Southwest region
+        // Reset map view to show BC Southwest region with smooth animation
         const southwestCenterLat = (BC_SOUTHWEST[0] + BC_SOUTHWEST[2]) / 2;
         const southwestCenterLng = (BC_SOUTHWEST[1] + BC_SOUTHWEST[3]) / 2;
-        map.setView([southwestCenterLat, southwestCenterLng], 9);
+        map.flyTo([southwestCenterLat, southwestCenterLng], 9, {
+            duration: 1.0,
+            easeLinearity: 0.25
+        });
     }
 </script>
 
