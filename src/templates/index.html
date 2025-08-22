@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Route Planner</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background: #f4f7f9;
+            color: #333;
+        }
+        #container {
+            display: flex;
+            width: 95%;
+            max-width: 1500px;
+        }
+        #form-section {
+            width: 20%;
+            padding: 25px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        #map-legend-section {
+            display: flex;
+            width: 80%;
+        }
+        #map-section {
+            width: 75%;
+            padding-left: 20px;
+            position: relative;
+        }
+        #legend-section {
+            width: 15%;
+            padding-left: 10px;
+            font-size: 14px;
+            border-left: 1px solid #ccc;
+            margin-left: 10px;
+        }
+        
+        /* Map selector styles */
+        #map-selector {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            position: relative;
+            display: block;
+        }
+        
+        .location-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .location-info h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .coordinates {
+            font-family: monospace;
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .address-info {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .clear-location {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .clear-location:hover {
+            background: #c82333;
+        }
+        
+        .map-instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #0056b3;
+        }
+        
+        .map-instructions strong {
+            color: #003d82;
+        }
+        
+        .location-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6c757d;
+        }
+        
+        .status-indicator.start {
+            background: #28a745;
+        }
+        
+        .status-indicator.destination {
+            background: #dc3545;
+        }
+        
+        .region-boundary {
+            stroke: #ff6b6b;
+            stroke-width: 3;
+            fill: none;
+            opacity: 0.7;
+        }
+        
+        .region-label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #ff6b6b;
+            text-anchor: middle;
+        }
+        
+        .geocoding-loading {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 11px;
+        }
+               
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        #generate-button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        #generate-button:hover {
+            background-color: #218838;
+        }
+        #clear-button {
+            background-color: #6c757d;
+            color: white;
+            cursor: pointer;
+        }
+        #clear-button:hover {
+            background-color: #5a6268;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes circularMotion {
+            0% { transform: translate(-50%, -50%) rotate(0deg) translateY(-20px) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg) translateY(-20px) rotate(-360deg); }
+        }
+        #loading-message {
+            animation: fadeIn 0.3s ease-in-out, circularMotion 4s linear infinite;
+            transition: opacity 0.3s ease-in-out;
+        }        
+        /* Tablet (iPad) and below */
+        @media (max-width: 768px) {
+            #container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #form-section,
+            #map-legend-section {
+                width: 100% !important;
+                padding: 15px;     
+            }
+            #map-section,
+            #legend-section {
+                width: 100% !important;
+                padding-left: 0 !important;
+                margin-left: 0 !important;
+                border-left: none !important;
+            }
+            iframe {
+                height: 300px;    
+            }
+            #map-selector {
+                height: 300px;
+            }
+        }
+
+        /* Mobile phones */
+        @media (max-width: 480px) {
+            body {
+                margin: 10px !important;
+            }
+            #form-section {
+                padding: 10px !important;
+            }
+            input, select, button {
+                height: 36px;       
+                font-size: 0.9rem;
+            }
+            #map-section {
+                height: auto;
+            }
+            #map-selector {
+                height: 250px;
+            }
+        }
+
+        
+    </style>
+</head>
+<body>
+
+<h1>EV Route Planner</h1>
+
+<div id="container">
+    <div id="form-section">
+        <form id="route-form">
+            <label for="start">Starting Location:</label>
+            <input type="text" id="start" name="start" required>
+
+            <label for="destination">Destination:</label>
+            <input type="text" id="destination" name="destination" required>
+
+            <!-- Map Selector Instructions -->
+            <div class="map-instructions">
+                <strong>📍 Map Selector:</strong><br>
+                Click on the map to the right to automatically fill the address fields above, or type locations manually.
+            </div>
+            
+            <!-- Hidden fields for coordinates -->
+            <input type="hidden" id="start_lat" name="start_lat">
+            <input type="hidden" id="start_lng" name="start_lng">
+            <input type="hidden" id="destination_lat" name="destination_lat">
+            <input type="hidden" id="destination_lng" name="destination_lng">
+
+            <label for="initial_soc">Initial Battery Percentage (%):</label>
+            <input type="number" id="initial_soc" name="initial_soc" required min="0" max="100" step="0.1" placeholder="0-100">
+
+            <label for="threshold_soc">Threshold Battery Percentage (%):</label>
+            <input type="number" id="threshold_soc" name="threshold_soc" required min="0" max="50" step="0.1" placeholder="0-50">
+
+            <label for="ev_model">Select EV Model:</label>
+            <select id="ev_model" name="ev_model" required>
+                <option value="" disabled selected>Select your EV</option>
+                <option value="Tesla Model 3">Tesla Model 3 </option>
+                <option value="Mini Cooper SE">Mini Cooper SE </option>
+                <option value="Citroen e-C4 X">Citroen e-C4 X </option>
+                <option value="Tesla Model Y Long Range AWD">Tesla Model Y Long Range AWD </option>
+                <option value="Porsche Taycan 4S Plus">Porsche Taycan 4S Plus </option>
+                <option value="BMW i4 M50">BMW i4 M50 </option>
+                <option value="BMW i7 xDrive60">BMW i7 xDrive60 </option>
+                <option value="Rolls-Royce Spectre">Rolls-Royce Spectre </option>
+                <option value="VinFast VF 9 Extended Range">VinFast VF 9 Extended Range </option>
+                <option value="Toyota PROACE Verso M 50 kWh">Toyota PROACE Verso M 50 kWh </option>
+                <option value="Mercedes-Benz eVito Tourer Long 90 kWh">Mercedes-Benz eVito Tourer Long 90 kWh </option>
+                <option value="Mercedes-Benz G 580">Mercedes-Benz G 580 </option>
+            </select>
+
+            <!-- Hidden field for sending consumption rate -->
+            <input type="hidden" id="consumption_rate" name="consumption_rate">
+
+            <div class="button-row">
+                <button type="button" id="clear-button">Clear Form</button>
+                <button type="submit" id="generate-button">Generate Route</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="map-legend-section">
+        <div id="map-section">
+            <!-- Map Selector (shown when filling form) -->
+            <div id="map-selector"></div>
+            
+            <!-- Loading Message -->
+            <div id="loading-message" style="display: none; position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%); font-size: 18px; font-weight: bold; color: #444;
+                background-color: rgba(255,255,255,0.9); padding: 20px; border-radius: 8px; z-index: 10;
+                text-align: center;">
+                🛠️ Generating map... Please wait.
+            </div>
+            
+            <!-- Route Map (shown after generating route) -->
+            <iframe id="map-frame" src=""></iframe>
+        </div>
+    
+        <div id="legend-section">
+        
+        </div>
+        
+    </div>
+</div>
+
+<!-- <button id="toggle-guide-button" style="margin-top: 30px; padding: 10px 20px; font-size: 16px; background-color:rgb(87, 83, 83); color: white; border: none; border-radius: 5px; cursor: pointer;">
+    📘 Show User Guide
+</button>
+
+<div id="user-guide" style="display: none; width: 100%; margin-top: 15px; padding: 10 20px; background-color: #ffffff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.05);">
+    <h2>User Guide</h2>
+    <p>
+        This EV Route Planner helps you find optimal routes from your starting location to your destination based on two key objectives:
+        <ul>
+            <li><strong>Travel Time</strong>: How quickly you can reach your destination.</li>
+            <li><strong>Charging Station Proximity</strong>: How close your route remains to charging stations, helping reduce range anxiety.</li>
+        </ul>
+    </p>
+    <h3>How It Works</h3>
+    <ul>
+        <li>Enter your <strong>starting location</strong> and <strong>destination</strong>.</li>
+        <li>Currently, our map coverage includes two regions: the  <strong>southwestern</strong> area and the <strong>northeastern</strong> area of British Columbia (BC). 
+            <ul>
+                <li>The southwestern area includes Vancouver, West Vancouver, North Vancouver, Coquitlam, Maple Ridge, Pitt Meadows, Burnaby, New Westminster, Surrey, Abbotsford, Chilliwack, Langley, White Rock, and Delta.</li>
+                <li>The northeast area includes Fort St. John, Dawson Creek, Pine Le Moray Provincial Park, Graham-Laurier Provincial Park, and the surrounding areas.</li>
+            </ul>
+        </li>
+        <li>Select your EV model to automatically apply the correct energy consumption rate.</li>
+        <li>Click <strong>Generate Route</strong> to compute optimal paths.</li>
+    </ul>
+
+    <h3>Understanding the Output</h3>
+    <ul>
+        <li>The map shows <strong>multiple route options</strong> with different colors. Each route represents a different trade-off between speed and safety (charging proximity).</li>
+        <li>Charging stations are marked with icons. Routes may include <strong>one or more charging stops</strong> based on your battery constraints.</li>
+        <li>The <strong>Legend</strong> on the right displays:
+            <ul>
+                <li>Travel time</li>
+                <li>Maximum distance from a charging station (safety)</li>
+                <li>When a charging stop is added, the total time in Section 1 includes the estimated linear <em>charging time</em> needed to reach 100% battery before continuing to the next segment.</li>
+                <li>Remaining battery at the end of the route</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p style="margin-top: 15px;">
+        If no valid route is found due to the battery constraints, the system may attempt to split the journey into two segments with an intermediate charging stop.
+    </p>
+</div> -->
+
+
+<script>
+    // Map variables
+    let map;
+    let startMarker = null;
+    let destinationMarker = null;
+    let startLocation = null;
+    let destinationLocation = null;
+    
+    // BC Region boundaries from get_charging_stations.py
+    const BC_SOUTHWEST = [49.0, -123.3, 49.9, -121.7]; // [south, west, north, east]
+    const BC_NORTHEAST = [55.0, -124.0, 58.0, -120.0]; // [south, west, north, east]
+    
+    // Initialize map when document is ready
+    $(document).ready(function () {
+        initializeMap();
+        
+        const defaultGenerateColor = '#28a745';
+        const clickedGenerateColor = 'red';
+
+        const evConsumptionRates = {
+            "Tesla Model 3": 0.137,
+            "Mini Cooper SE": 0.149,
+            "Citroen e-C4 X": 0.157,
+            "Tesla Model Y Long Range AWD": 0.167,
+            "Porsche Taycan 4S Plus": 0.172,
+            "BMW i4 M50": 0.181,
+            "BMW i7 xDrive60": 0.199,
+            "Rolls-Royce Spectre": 0.219,
+            "VinFast VF 9 Extended Range": 0.239,
+            "Toyota PROACE Verso M 50 kWh": 0.257,
+            "Mercedes-Benz eVito Tourer Long 90 kWh": 0.281,
+            "Mercedes-Benz G 580": 0.322,
+            "Max": 4.0
+        };
+    
+        $("#ev_model").change(function () {
+            const selectedModel = $(this).val();
+            const rate = evConsumptionRates[selectedModel];
+            $("#consumption_rate").val(rate);
+        });
+
+        $("#route-form").submit(function (event) {
+            event.preventDefault();
+            
+            // Validate that both locations are set (either by text or map)
+            const startText = $("#start").val().trim();
+            const destText = $("#destination").val().trim();
+            
+            if (!startText && !startLocation) {
+                alert("⚠️ Please enter a starting location or set it on the map.");
+                return;
+            }
+            
+            if (!destText && !destinationLocation) {
+                alert("⚠️ Please enter a destination or set it on the map.");
+                return;
+            }
+
+            const initialSOC = parseFloat($("#initial_soc").val());
+            const thresholdSOC = parseFloat($("#threshold_soc").val());
+
+            if (thresholdSOC > initialSOC) {
+                alert("⚠️ Threshold battery percentage cannot be greater than Initial battery percentage.");
+                return;
+            }           
+            // Disable button to prevent multiple submissions
+            $("#generate-button").prop("disabled", true);
+            $("#clear-button").prop("disabled", true);
+
+            // Hide map selector and show loading
+            $("#map-selector").hide();
+            $("#map-frame").hide();    
+            $("#legend-section").hide();                      
+
+            // Change color on click
+            $("#generate-button").css("background-color", clickedGenerateColor);
+            $("#loading-message").fadeIn(300);
+
+            $.ajax({
+                type: "POST",
+                url: "/generate-route",
+                data: $(this).serialize(),
+                success: function (response) {
+                    $("#loading-message").hide();
+                    $("#generate-button").prop("disabled", false); 
+                    $("#clear-button").prop("disabled", false);
+
+                    if (response.success) {
+                        let timestamp = new Date().getTime();
+                        let updatedURL = response.map_url + "?t=" + timestamp; // Prevent caching
+
+                        $("#map-frame").hide();
+                        $("#legend-section").hide();
+
+                        $("#map-frame").off("load").on("load", function () {
+                            // Show both map and legend after iframe finishes loading
+                            $("#map-frame").show();
+                            if (response.legend_html) {
+                                $("#legend-section").html(response.legend_html).show();
+                            }
+                            $("#loading-message").fadeOut(300);
+                        });
+                        $("#map-frame").attr("src", updatedURL);
+                    } else {
+                        alert("Error: " + response.error);
+                        // Show map selector again if there's an error
+                        $("#map-selector").show();
+                    } 
+                },
+                error: function () {
+                    $("#loading-message").fadeOut(300);
+                    $("#generate-button").prop("disabled", false); 
+                    $("#clear-button").prop("disabled", false);
+                    alert("Failed to connect to the server.");
+                    // Show map selector again if there's an error
+                    $("#map-selector").show();
+                }
+            });
+        });
+
+        $("#clear-button").click(function () {
+            $("#route-form")[0].reset();       
+            $("#generate-button").css("background-color", defaultGenerateColor); 
+            $("#map-frame").hide();    
+            $("#legend-section").hide();
+            $("#loading-message").fadeOut(300);
+            
+            // Clear map markers and locations
+            clearAllLocations();
+            
+            // Show map selector again
+            $("#map-selector").show();
+        });
+
+        $("#toggle-guide-button").click(function () {
+            $("#user-guide").slideToggle(300);
+            const currentText = $(this).text();
+            $(this).text(currentText.includes("Show") ? "📕 Hide User Guide" : "📘 Show User Guide");
+        });
+    });
+    
+    // Initialize the map
+    function initializeMap() {
+        // Center on BC regions
+        const centerLat = (BC_SOUTHWEST[0] + BC_NORTHEAST[2]) / 2;
+        const centerLng = (BC_SOUTHWEST[1] + BC_NORTHEAST[3]) / 2;
+        map = L.map('map-selector').setView([centerLat, centerLng], 6);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Add BC region boundaries
+        addRegionBoundaries();
+        
+        // Add click event to map
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Check if click is within BC regions
+            if (!isWithinBCRegions(lat, lng)) {
+                alert("⚠️ Please click within the highlighted BC regions only. Our service covers southwestern and northeastern areas of British Columbia.");
+                return;
+            }
+            
+            // If no start location is set, set it
+            if (!startLocation) {
+                setStartLocation(lat, lng);
+            }
+            // If start is set but no destination, set destination
+            else if (!destinationLocation) {
+                setDestinationLocation(lat, lng);
+            }
+            // If both are set, replace destination
+            else {
+                setDestinationLocation(lat, lng);
+            }
+        });
+    }
+    
+    // Add region boundaries to the map
+    function addRegionBoundaries() {
+        // Southwest region boundary
+        const southwestBounds = [
+            [BC_SOUTHWEST[0], BC_SOUTHWEST[1]], // SW
+            [BC_SOUTHWEST[2], BC_SOUTHWEST[1]], // NW
+            [BC_SOUTHWEST[2], BC_SOUTHWEST[3]], // NE
+            [BC_SOUTHWEST[0], BC_SOUTHWEST[3]]  // SE
+        ];
+        
+        const southwestPolygon = L.polygon(southwestBounds, {
+            color: '#ff6b6b',
+            weight: 3,
+            fillColor: '#ff6b6b',
+            fillOpacity: 0.1
+        }).addTo(map);
+        
+        // Northeast region boundary
+        const northeastBounds = [
+            [BC_NORTHEAST[0], BC_NORTHEAST[1]], // SW
+            [BC_NORTHEAST[2], BC_NORTHEAST[1]], // NW
+            [BC_NORTHEAST[2], BC_NORTHEAST[3]], // NE
+            [BC_NORTHEAST[0], BC_NORTHEAST[3]]  // SE
+        ];
+        
+        const northeastPolygon = L.polygon(northeastBounds, {
+            color: '#ff6b6b',
+            weight: 3,
+            fillColor: '#ff6b6b',
+            fillOpacity: 0.1
+        }).addTo(map);
+        
+        // Add labels
+        const southwestCenter = [
+            (BC_SOUTHWEST[0] + BC_SOUTHWEST[2]) / 2,
+            (BC_SOUTHWEST[1] + BC_SOUTHWEST[3]) / 2
+        ];
+        
+        const northeastCenter = [
+            (BC_NORTHEAST[0] + BC_NORTHEAST[2]) / 2,
+            (BC_NORTHEAST[1] + BC_NORTHEAST[3]) / 2
+        ];
+        
+        L.marker(southwestCenter).bindTooltip("BC Southwest Region", {permanent: true, className: "region-label"}).addTo(map);
+        L.marker(northeastCenter).bindTooltip("BC Northeast Region", {permanent: true, className: "region-label"}).addTo(map);
+    }
+    
+    // Check if coordinates are within BC regions
+    function isWithinBCRegions(lat, lng) {
+        // Check Southwest region
+        if (lat >= BC_SOUTHWEST[0] && lat <= BC_SOUTHWEST[2] && 
+            lng >= BC_SOUTHWEST[1] && lng <= BC_SOUTHWEST[3]) {
+            return true;
+        }
+        
+        // Check Northeast region
+        if (lat >= BC_NORTHEAST[0] && lat <= BC_NORTHEAST[2] && 
+            lng >= BC_NORTHEAST[1] && lng <= BC_NORTHEAST[3]) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // Reverse geocoding function to get address from coordinates
+    async function getAddressFromCoordinates(lat, lng) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const data = await response.json();
+            
+            if (data.error) {
+                return "Address not found";
+            }
+            
+            const address = data.address;
+            let fullAddress = "";
+            
+            // Build address string with street number, street name, and city
+            if (address.house_number) {
+                fullAddress += address.house_number + " ";
+            }
+            if (address.road) {
+                fullAddress += address.road + ", ";
+            }
+            if (address.city) {
+                fullAddress += address.city;
+            } else if (address.town) {
+                fullAddress += address.town;
+            } else if (address.village) {
+                fullAddress += address.village;
+            } else if (address.county) {
+                fullAddress += address.county;
+            }
+            
+            // If we still don't have a city, try province/state
+            if (!fullAddress.includes(",") && address.state) {
+                fullAddress += address.state;
+            }
+            
+            return fullAddress || "Address not found";
+        } catch (error) {
+            console.error("Error getting address:", error);
+            return "Address not found";
+        }
+    }
+    
+    // Set start location
+    async function setStartLocation(lat, lng) {
+        // Remove existing start marker
+        if (startMarker) {
+            map.removeLayer(startMarker);
+        }
+        
+        // Create new start marker (green)
+        startMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'start-marker',
+                html: '🟢',
+                iconSize: [24, 24]
+            })
+        }).addTo(map);
+        
+        startLocation = { lat: lat, lng: lng };
+        
+        // Update hidden fields
+        $("#start_lat").val(lat);
+        $("#start_lng").val(lng);
+        
+        // Get and auto-fill address
+        const address = await getAddressFromCoordinates(lat, lng);
+        $("#start").val(address);
+        
+        // Fit map to show both markers if destination exists
+        if (destinationLocation) {
+            const bounds = L.latLngBounds([startLocation, destinationLocation]);
+            map.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+            map.setView([lat, lng], 10);
+        }
+    }
+    
+    // Set destination location
+    async function setDestinationLocation(lat, lng) {
+        // Remove existing destination marker
+        if (destinationMarker) {
+            map.removeLayer(destinationMarker);
+        }
+        
+        // Create new destination marker (red)
+        destinationMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'destination-marker',
+                html: '🔴',
+                iconSize: [24, 24]
+            })
+        }).addTo(map);
+        
+        destinationLocation = { lat: lat, lng: lng };
+        
+        // Update hidden fields
+        $("#destination_lat").val(lat);
+        $("#destination_lng").val(lng);
+        
+        // Get and auto-fill address
+        const address = await getAddressFromCoordinates(lat, lng);
+        $("#destination").val(address);
+        
+        // Fit map to show both markers
+        if (startLocation) {
+            const bounds = L.latLngBounds([startLocation, destinationLocation]);
+            map.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+            map.setView([lat, lng], 10);
+        }
+    }
+    
+    // Clear specific location
+    function clearLocation(type) {
+        if (type === 'start') {
+            if (startMarker) {
+                map.removeLayer(startMarker);
+                startMarker = null;
+            }
+            startLocation = null;
+            $("#start_lat").val('');
+            $("#start_lng").val('');
+            $("#start").val(''); // Clear the input field
+        } else if (type === 'destination') {
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+            destinationLocation = null;
+            $("#destination_lat").val('');
+            $("#destination_lng").val('');
+            $("#destination").val(''); // Clear the input field
+        }
+    }
+    
+    // Clear all locations
+    function clearAllLocations() {
+        clearLocation('start');
+        clearLocation('destination');
+        
+        // Reset map view to show BC regions
+        const centerLat = (BC_SOUTHWEST[0] + BC_NORTHEAST[2]) / 2;
+        const centerLng = (BC_SOUTHWEST[1] + BC_NORTHEAST[3]) / 2;
+        map.setView([centerLat, centerLng], 6);
+    }
+</script>
+
+</body>
+</html>
